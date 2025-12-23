@@ -129,10 +129,10 @@ collector_df = pd.DataFrame({
     "Per Unit (pu)": [
         R1_eq / Z_base,
         X1_eq / Z_base,
-        B1_eq / B_base*1e6,
+        B1_eq / B_base,
         R0_eq / Z_base,
         X0_eq / Z_base,
-        B0_eq / B_base*1e6
+        B0_eq / B_base*
     ]
 })
 
