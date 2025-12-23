@@ -51,8 +51,8 @@ st.header("3. MV Cable Data")
 c1, c2, c3 = st.columns(3)
 R1_cable = c1.number_input("Cable R1 (Ω/km)", value=0.040)
 X1_cable = c2.number_input("Cable X1 (Ω/km)", value=0.080)
-C1_F_per_km = c3.number_input("Cable C1 (F/km)", value=2.63e-9)
-
+C1_uf_per_km = c3.number_input("Cable C1 (F/km)", value=2.63e-9)
+C1_F_per_km = C1_uf_km * 1e-6
 c1, c2 = st.columns(2)
 R0_cable = c1.number_input("Cable R0 (Ω/km)", value=0.100)
 X0_cable = c2.number_input("Cable X0 (Ω/km)", value=0.250)
