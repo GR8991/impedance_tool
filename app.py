@@ -120,7 +120,6 @@ st.dataframe(feeder_df.round(6), use_container_width=True)
 # =========================================================
 st.header("5. Collector Equivalent Results")
 
-collector_df = pd.DataFrame({
    collector_df = pd.DataFrame({
     "Parameter": ["R1 (Ω)", "X1 (Ω)", "B1 (µS)", "R0 (Ω)", "X0 (Ω)", "B0 (µS)"],
     "Value": [
