@@ -136,7 +136,7 @@ collector_df = pd.DataFrame({
         B1_eq / B_base*1e6,
         R0_eq / Z_base,
         X0_eq / Z_base,
-        B0_eq / B_base
+        B0_eq / B_base*1e6
     ]
 })
 
