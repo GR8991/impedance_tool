@@ -123,16 +123,16 @@ st.header("5. Collector Equivalent Results")
 collector_df = pd.DataFrame({
     "Parameter": ["R1 (Ω)", "X1 (Ω)", "B1 (S)", "R0 (Ω)", "X0 (Ω)", "B0 (S)"],
     "Ohmic / SI Value": [
-        R1_eq, X1_eq, B1_eq*1e6,
-        R0_eq, X0_eq, B0_eq*1e6
+        R1_eq, X1_eq, B1_eq,
+        R0_eq, X0_eq, B0_eq
     ],
     "Per Unit (pu)": [
         R1_eq / Z_base,
         X1_eq / Z_base,
-        B1_eq / B_base,
+        B1_eq / B_base*1e6,
         R0_eq / Z_base,
         X0_eq / Z_base,
-        B0_eq / B_base
+        B0_eq / B_base*1e6
     ]
 })
 
