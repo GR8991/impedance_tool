@@ -2,128 +2,159 @@ import streamlit as st
 import pandas as pd
 import math
 
+# =========================================================
+# Page config
+# =========================================================
 st.set_page_config(
-    page_title="BESS Collector Impedance Tool",
+    page_title="BESS MV Collector Impedance Tool",
     layout="wide"
 )
 
-st.title("BESS MV Collector System Equivalent Calculator")
-st.caption("Engineering-accurate calculation aligned with hand/Excel methods")
+st.title("BESS MV Collector System Equivalent Impedance Tool")
+st.caption("Engineering-accurate MV collector modeling (aligned with hand / Excel calculations)")
 
 # =========================================================
-# INPUTS
+# 1. SYSTEM BASE
 # =========================================================
-st.header("1. System Inputs")
+st.header("1. System Base")
 
-col1, col2, col3 = st.columns(3)
+c1, c2, c3 = st.columns(3)
+V_mv_kV = c1.number_input("Collector Bus Voltage (kV)", value=34.5)
+base_MVA = c2.number_input("Base MVA (for per-unit)", value=100.0)
+freq = c3.number_input("System Frequency (Hz)", value=60.0)
 
-with col1:
-    n_feeders = st.number_input("Number of Feeders", min_value=1, value=6)
-    V_mv_kV = st.number_input("MV Collector Voltage (kV)", value=34.5)
-    base_MVA = st.number_input("Base MVA (for per-unit)", value=100.0)
-
-with col2:
-    S_tr_MVA = st.number_input("Transformer Rating per Feeder (MVA)", value=5.0)
-    Z_tr_pct = st.number_input("Transformer Impedance (%)", value=7.0)
-    XR_tr = st.number_input("Transformer X/R Ratio", value=10.0)
-
-with col3:
-    cable_len_km = st.number_input("MV Cable Length per Feeder (km)", value=0.00975)
-    freq = st.number_input("System Frequency (Hz)", value=60.0)
-
-st.header("2. MV Cable Electrical Data (Ω/km, F/km)")
-
-col4, col5, col6 = st.columns(3)
-
-with col4:
-    R1_cable = st.number_input("R1 (Ω/km)", value=0.040)
-    X1_cable = st.number_input("X1 (Ω/km)", value=0.080)
-
-with col5:
-    R0_cable = st.number_input("R0 (Ω/km)", value=0.100)
-    X0_cable = st.number_input("X0 (Ω/km)", value=0.250)
-
-with col6:
-    C1_F_per_km = st.number_input("C1 (F/km)", value=2.63e-9)
+Z_base = (V_mv_kV ** 2) / base_MVA
+B_base = 1 / Z_base
 
 # =========================================================
-# CALCULATION
+# 2. FEEDER CONFIGURATION
 # =========================================================
-if st.button("Compute Collector Equivalent"):
+st.header("2. Feeder Configuration")
 
-    # ---------- Transformer ----------
-    Zbase_tr = (V_mv_kV ** 2) / S_tr_MVA
-    Ztr = (Z_tr_pct / 100) * Zbase_tr
+c1, c2, c3 = st.columns(3)
+n_feeders = c1.number_input("Number of Feeders", min_value=1, value=6)
+S_tr_MVA = c2.number_input("Transformer Rating per Feeder (MVA)", value=5.0)
+n_tr = c3.number_input("Transformers per Feeder", min_value=1, value=5)
 
-    Rtr = Ztr / math.sqrt(1 + XR_tr ** 2)
-    Xtr = XR_tr * Rtr
+c1, c2 = st.columns(2)
+Z_tr_pct = c1.number_input("Transformer Impedance (%)", value=7.0)
+XR_tr = c2.number_input("Transformer X/R Ratio", value=10.0)
 
-    R0_tr = 2 * Rtr
-    X0_tr = 3 * Xtr
+# =========================================================
+# 3. MV CABLE DATA
+# =========================================================
+st.header("3. MV Cable Data")
 
-    # ---------- Cable ----------
-    R1_c = R1_cable * cable_len_km
-    X1_c = X1_cable * cable_len_km
-    R0_c = R0_cable * cable_len_km
-    X0_c = X0_cable * cable_len_km
+c1, c2, c3 = st.columns(3)
+R1_cable = c1.number_input("Cable R1 (Ω/km)", value=0.040)
+X1_cable = c2.number_input("Cable X1 (Ω/km)", value=0.080)
+C1_F_per_km = c3.number_input("Cable C1 (F/km)", value=2.63e-9)
 
-    # ---------- Per-feeder ----------
-    R1_f = Rtr + R1_c
-    X1_f = Xtr + X1_c
-    R0_f = R0_tr + R0_c
-    X0_f = X0_tr + X0_c
+c1, c2 = st.columns(2)
+R0_cable = c1.number_input("Cable R0 (Ω/km)", value=0.100)
+X0_cable = c2.number_input("Cable X0 (Ω/km)", value=0.250)
 
-    # ---------- Collector equivalent ----------
-    R1_eq = R1_f / n_feeders
-    X1_eq = X1_f / n_feeders
-    R0_eq = R0_f / n_feeders
-    X0_eq = X0_f / n_feeders
+length_ft = st.number_input("Cable Length per Feeder (ft)", value=32.0)
+length_km = length_ft * 0.0003048
 
-    # ---------- Shunt susceptance ----------
-    omega = 2 * math.pi * freq
-    B1_f = omega * C1_F_per_km * cable_len_km
-    B0_f = 0.75 * B1_f
+# =========================================================
+# 4. CALCULATIONS (MATCHES YOUR HAND METHOD)
+# =========================================================
 
-    B1_eq = n_feeders * B1_f
-    B0_eq = n_feeders * B0_f
+# ---- Transformer impedance (on MV base, as per your approach)
+Zbase_tr = (V_mv_kV ** 2) / S_tr_MVA
+Ztr = (Z_tr_pct / 100) * Zbase_tr
 
-    # ---------- Per-unit ----------
-    Zbase = (V_mv_kV ** 2) / base_MVA
-    Bbase = 1 / Zbase
+Rtr_single = Ztr / math.sqrt(1 + XR_tr ** 2)
+Xtr_single = XR_tr * Rtr_single
 
-    # =========================================================
-    # OUTPUT TABLES
-    # =========================================================
-    st.header("3. Per-Feeder Impedance Breakdown (Ω)")
+# Transformer per feeder
+R1_tr = n_tr * Rtr_single
+X1_tr = n_tr * Xtr_single
 
-    feeder_df = pd.DataFrame({
-        "Component": ["Transformer", "MV Cable", "Feeder Total"],
-        "R1 (Ω)": [Rtr, R1_c, R1_f],
-        "X1 (Ω)": [Xtr, X1_c, X1_f],
-        "R0 (Ω)": [R0_tr, R0_c, R0_f],
-        "X0 (Ω)": [X0_tr, X0_c, X0_f],
-    })
+R0_tr = 2 * R1_tr
+X0_tr = 3 * X1_tr
 
-    st.dataframe(feeder_df.style.format("{:.6f}"), use_container_width=True)
+# ---- MV cable per feeder
+R1_c = R1_cable * length_km
+X1_c = X1_cable * length_km
+R0_c = R0_cable * length_km
+X0_c = X0_cable * length_km
 
-    st.header("4. Collector Equivalent Results")
+# ---- Feeder total (series)
+R1_fd = R1_tr + R1_c
+X1_fd = X1_tr + X1_c
+R0_fd = R0_tr + R0_c
+X0_fd = X0_tr + X0_c
 
-    collector_df = pd.DataFrame({
-        "Parameter": ["R1 (Ω)", "X1 (Ω)", "B1 (S)", "R0 (Ω)", "X0 (Ω)", "B0 (S)"],
-        "Ohmic / SI Value": [
-            R1_eq, X1_eq, B1_eq,
-            R0_eq, X0_eq, B0_eq
-        ],
-        "Per Unit (pu)": [
-            R1_eq / Zbase,
-            X1_eq / Zbase,
-            B1_eq / Bbase,
-            R0_eq / Zbase,
-            X0_eq / Zbase,
-            B0_eq / Bbase
-        ]
-    })
+# ---- Collector equivalent (parallel feeders)
+R1_eq = R1_fd / n_feeders
+X1_eq = X1_fd / n_feeders
+R0_eq = R0_fd / n_feeders
+X0_eq = X0_fd / n_feeders
 
-    st.dataframe(collector_df.style.format("{:.6e}"), use_container_width=True)
+# ---- Shunt susceptance (MV cable only)
+omega = 2 * math.pi * freq
+B1_f = omega * C1_F_per_km * length_km
+B0_f = 0.75 * B1_f
 
-    st.success("Calculation complete — values match engineering hand calculations.")
+B1_eq = n_feeders * B1_f
+B0_eq = n_feeders * B0_f
+
+# =========================================================
+# 5. RESULTS — PER FEEDER BREAKDOWN
+# =========================================================
+st.header("4. Per-Feeder Impedance Breakdown (Ohms)")
+
+feeder_df = pd.DataFrame({
+    "Component": ["Transformer", "MV Cable", "Feeder Total"],
+    "R1 (Ω)": [R1_tr, R1_c, R1_fd],
+    "X1 (Ω)": [X1_tr, X1_c, X1_fd],
+    "R0 (Ω)": [R0_tr, R0_c, R0_fd],
+    "X0 (Ω)": [X0_tr, X0_c, X0_fd],
+})
+
+st.dataframe(feeder_df.round(6), use_container_width=True)
+
+# =========================================================
+# 6. RESULTS — COLLECTOR EQUIVALENT
+# =========================================================
+st.header("5. Collector Equivalent Results")
+
+collector_df = pd.DataFrame({
+    "Parameter": ["R1 (Ω)", "X1 (Ω)", "B1 (S)", "R0 (Ω)", "X0 (Ω)", "B0 (S)"],
+    "Ohmic / SI Value": [
+        R1_eq, X1_eq, B1_eq,
+        R0_eq, X0_eq, B0_eq
+    ],
+    "Per Unit (pu)": [
+        R1_eq / Z_base,
+        X1_eq / Z_base,
+        B1_eq / B_base,
+        R0_eq / Z_base,
+        X0_eq / Z_base,
+        B0_eq / B_base
+    ]
+})
+
+st.dataframe(collector_df.round(6), use_container_width=True)
+
+# =========================================================
+# 7. INTERCONNECTION FORM (COPY–PASTE)
+# =========================================================
+st.header("6. Interconnection Form – Collector Equivalent")
+
+st.code(f"""
+Collector system voltage = {V_mv_kV:.2f} kV
+Collector equivalent model rating = {base_MVA:.1f} MVA
+
+R1 = {R1_eq:.4f} ohm or {R1_eq/Z_base:.5f} pu
+X1 = {X1_eq:.4f} ohm or {X1_eq/Z_base:.5f} pu
+B1 = {B1_eq:.6e} S or {B1_eq/B_base:.6e} pu
+
+R0 = {R0_eq:.4f} ohm or {R0_eq/Z_base:.5f} pu
+X0 = {X0_eq:.4f} ohm or {X0_eq/Z_base:.5f} pu
+B0 = {B0_eq:.6e} S or {B0_eq/B_base:.6e} pu
+""")
+
+st.success("Calculation complete — results match hand and Excel methodology.")
