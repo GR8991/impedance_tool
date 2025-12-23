@@ -113,7 +113,15 @@ feeder_df = pd.DataFrame({
     "X0 (Ω)": [X0_tr, X0_c, X0_fd],
 })
 
-st.dataframe(feeder_df.round(6), use_container_width=True)
+st.dataframe(
+    collector_df.style.format({
+        "SI Value": "{:.6e}",
+        "Per Unit (pu)": "{:.6e}",
+        "B (µS)": "{:.3f}"
+    }),
+    use_container_width=True
+)
+
 
 # =========================================================
 # 6. COLLECTOR EQUIVALENT — FIXED B1 & B0
