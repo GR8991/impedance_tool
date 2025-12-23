@@ -125,10 +125,10 @@ collector_df = pd.DataFrame({
     "Ohmic / SI Value": [
         R1_eq,
         X1_eq,
-        B1_eq * 1e6,   # convert S → µS
+        B1_eq ,   # convert S → µS
         R0_eq,
         X0_eq,
-        B0_eq * 1e6    # convert S → µS
+        B0_eq     # convert S → µS
     ],
     "Per Unit (pu)": [
         R1_eq / Z_base,
