@@ -166,4 +166,4 @@ B0 = {B0_eq*1e6:.4f} µS or {B0_eq/B_base:.6e} pu
 """)
 
 
-st.success("Calculation complete — values now match hand and Excel results.")'''
+st.success("Calculation complete — values now match hand and Excel results.")
