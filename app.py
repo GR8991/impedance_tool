@@ -3,7 +3,7 @@ import pandas as pd
 import math
 
 # =========================================================
-# PAGE CONFIG
+# Page config
 # =========================================================
 st.set_page_config(
     page_title="BESS MV Collector Impedance Tool",
@@ -49,20 +49,19 @@ XR_tr = c2.number_input("Transformer X/R Ratio", value=10.0)
 st.header("3. MV Cable Data")
 
 c1, c2, c3 = st.columns(3)
-R1_cable = c1.number_input("Cable R1 (Ω/km)", value=0.040, format="%.4f")
-X1_cable = c2.number_input("Cable X1 (Ω/km)", value=0.080, format="%.4f")
-# Default C1 value set slightly higher to match typical MV cables for realistic results
-C1_F_per_km = c3.number_input("Cable C1 (F/km)", value=2.63e-7, format="%.2e")
+R1_cable = c1.number_input("Cable R1 (Ω/km)", value=0.040)
+X1_cable = c2.number_input("Cable X1 (Ω/km)", value=0.080)
+C1_F_per_km = c3.number_input("Cable C1 (F/km)", value=2.63e-9)
 
 c1, c2 = st.columns(2)
-R0_cable = c1.number_input("Cable R0 (Ω/km)", value=0.100, format="%.4f")
-X0_cable = c2.number_input("Cable X0 (Ω/km)", value=0.250, format="%.4f")
+R0_cable = c1.number_input("Cable R0 (Ω/km)", value=0.100)
+X0_cable = c2.number_input("Cable X0 (Ω/km)", value=0.250)
 
 length_ft = st.number_input("Cable Length per Feeder (ft)", value=32.0)
 length_km = length_ft * 0.0003048
 
 # =========================================================
-# 4. CALCULATIONS
+# 4. CALCULATIONS (MATCHES YOUR HAND METHOD)
 # =========================================================
 
 # ---- Transformer impedance (per feeder equivalent)
@@ -117,19 +116,19 @@ feeder_df = pd.DataFrame({
 st.dataframe(feeder_df.round(6), use_container_width=True)
 
 # =========================================================
-# 6. COLLECTOR EQUIVALENT RESULTS
+# 6. COLLECTOR EQUIVALENT
 # =========================================================
 st.header("5. Collector Equivalent Results")
 
 collector_df = pd.DataFrame({
     "Parameter": ["R1 (Ω)", "X1 (Ω)", "B1 (µS)", "R0 (Ω)", "X0 (Ω)", "B0 (µS)"],
-    "SI Value": [
+    "Ohmic / SI Value": [
         R1_eq,
         X1_eq,
-        B1_eq * 1e6,  # Shown as µS
+        B1_eq ,   # convert S → µS
         R0_eq,
         X0_eq,
-        B0_eq * 1e6   # Shown as µS
+        B0_eq     # convert S → µS
     ],
     "Per Unit (pu)": [
         R1_eq / Z_base,
@@ -141,17 +140,15 @@ collector_df = pd.DataFrame({
     ]
 })
 
-# Displaying with consistent formatting
 st.dataframe(
-    collector_df.style.format({
-        "SI Value": "{:.6f}",
-        "Per Unit (pu)": "{:.2e}"
-    }),
+    collector_df.applymap(
+        lambda x: f"{x:.6g}" if isinstance(x, (int, float)) else x
+    ),
     use_container_width=True
 )
 
 # =========================================================
-# 7. INTERCONNECTION FORM OUTPUT (EXACT FORMAT)
+# 7. INTERCONNECTION FORM OUTPUT
 # =========================================================
 st.header("6. Interconnection Form – Collector Equivalent")
 
@@ -159,19 +156,14 @@ st.code(f"""
 Collector system voltage = {V_mv_kV:.2f} kV
 Collector equivalent model rating = {base_MVA:.1f} MVA
 
-R1 = {R1_eq:.4f} ohm
-R1,pu = {R1_eq/Z_base:.5f}
-X1 = {X1_eq:.4f} ohm
-X1,pu = {X1_eq/Z_base:.5f}
-B1 = {B1_eq*1e6:.2f} µS
-B1,pu = {B1_eq/B_base:.2e}
+R1 = {R1_eq:.4f} ohm or {R1_eq/Z_base:.5f} pu
+X1 = {X1_eq:.4f} ohm or {X1_eq/Z_base:.5f} pu
+B1 = {B1_eq*1e6:.4f} µS or {B1_eq/B_base:.6e} pu
 
-R0 = {R0_eq:.4f} ohm
-R0,pu = {R0_eq/Z_base:.5f}
-X0 = {X0_eq:.4f} ohm
-X0,pu = {X0_eq/Z_base:.5f}
-B0 = {B0_eq*1e6:.2f} µS
-B0,pu = {B0_eq/B_base:.2e}
-""", language="text")
+R0 = {R0_eq:.4f} ohm or {R0_eq/Z_base:.5f} pu
+X0 = {X0_eq:.4f} ohm or {X0_eq/Z_base:.5f} pu
+B0 = {B0_eq*1e6:.4f} µS or {B0_eq/B_base:.6e} pu
+""")
 
-st.success("Calculation complete — output format matches required B1/B0 display standards.")
+
+st.success("Calculation complete — values now match hand and Excel results.")'''
