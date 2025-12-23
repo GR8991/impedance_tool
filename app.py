@@ -158,11 +158,12 @@ Collector equivalent model rating = {base_MVA:.1f} MVA
 
 R1 = {R1_eq:.4f} ohm or {R1_eq/Z_base:.5f} pu
 X1 = {X1_eq:.4f} ohm or {X1_eq/Z_base:.5f} pu
-B1 = {B1_eq:.6e} S or {B1_eq/B_base:.6e} pu
+B1 = {B1_eq*1e6:.4f} µS or {B1_eq/B_base:.6e} pu
 
 R0 = {R0_eq:.4f} ohm or {R0_eq/Z_base:.5f} pu
 X0 = {X0_eq:.4f} ohm or {X0_eq/Z_base:.5f} pu
-B0 = {B0_eq:.6e} S or {B0_eq/B_base:.6e} pu
+B0 = {B0_eq*1e6:.4f} µS or {B0_eq/B_base:.6e} pu
 """)
+
 
 st.success("Calculation complete — values now match hand and Excel results.")
