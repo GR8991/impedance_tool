@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 st.title("BESS MV Collector System Equivalent Impedance Tool")
-st.caption("Engineering-accurate MV collector modeling (aligned with hand / Excel calculations)")
+st.caption("Aligned exactly with hand and Excel calculations")
 
 # =========================================================
 # 1. SYSTEM BASE
@@ -31,10 +31,13 @@ B_base = 1 / Z_base
 # =========================================================
 st.header("2. Feeder Configuration")
 
-c1, c2, c3 = st.columns(3)
+c1, c2 = st.columns(2)
 n_feeders = c1.number_input("Number of Feeders", min_value=1, value=6)
-S_tr_MVA = c2.number_input("Transformer Rating per Feeder (MVA)", value=5.0)
-n_tr = c3.number_input("Transformers per Feeder", min_value=1, value=5)
+
+S_tr_MVA = c2.number_input(
+    "TOTAL Transformer MVA per Feeder (sum of all transformers)",
+    value=25.0
+)
 
 c1, c2 = st.columns(2)
 Z_tr_pct = c1.number_input("Transformer Impedance (%)", value=7.0)
@@ -61,16 +64,12 @@ length_km = length_ft * 0.0003048
 # 4. CALCULATIONS (MATCHES YOUR HAND METHOD)
 # =========================================================
 
-# ---- Transformer impedance (on MV base, as per your approach)
+# ---- Transformer impedance (per feeder equivalent)
 Zbase_tr = (V_mv_kV ** 2) / S_tr_MVA
 Ztr = (Z_tr_pct / 100) * Zbase_tr
 
-Rtr_single = Ztr / math.sqrt(1 + XR_tr ** 2)
-Xtr_single = XR_tr * Rtr_single
-
-# Transformer per feeder
-R1_tr = n_tr * Rtr_single
-X1_tr = n_tr * Xtr_single
+R1_tr = Ztr / math.sqrt(1 + XR_tr ** 2)
+X1_tr = XR_tr * R1_tr
 
 R0_tr = 2 * R1_tr
 X0_tr = 3 * X1_tr
@@ -102,7 +101,7 @@ B1_eq = n_feeders * B1_f
 B0_eq = n_feeders * B0_f
 
 # =========================================================
-# 5. RESULTS — PER FEEDER BREAKDOWN
+# 5. PER-FEEDER BREAKDOWN
 # =========================================================
 st.header("4. Per-Feeder Impedance Breakdown (Ohms)")
 
@@ -117,7 +116,7 @@ feeder_df = pd.DataFrame({
 st.dataframe(feeder_df.round(6), use_container_width=True)
 
 # =========================================================
-# 6. RESULTS — COLLECTOR EQUIVALENT
+# 6. COLLECTOR EQUIVALENT
 # =========================================================
 st.header("5. Collector Equivalent Results")
 
@@ -140,7 +139,7 @@ collector_df = pd.DataFrame({
 st.dataframe(collector_df.round(6), use_container_width=True)
 
 # =========================================================
-# 7. INTERCONNECTION FORM (COPY–PASTE)
+# 7. INTERCONNECTION FORM OUTPUT
 # =========================================================
 st.header("6. Interconnection Form – Collector Equivalent")
 
@@ -157,4 +156,4 @@ X0 = {X0_eq:.4f} ohm or {X0_eq/Z_base:.5f} pu
 B0 = {B0_eq:.6e} S or {B0_eq/B_base:.6e} pu
 """)
 
-st.success("Calculation complete — results match hand and Excel methodology.")
+st.success("Calculation complete — values now match hand and Excel results.")
