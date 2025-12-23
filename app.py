@@ -165,6 +165,6 @@ X0 = {X0_eq:.4f} ohm or {X0_eq/Z_base:.5f} pu
 B0 = {B0_eq*1e6:.4f} µS or {B0_eq/B_base:.6e} pu
 """)
 
-print(B1_eq)
+
 st.success("Calculation complete — values now match hand and Excel results.")
 
